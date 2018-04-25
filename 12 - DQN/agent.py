@@ -29,16 +29,21 @@ SCREEN_HEIGHT = 10
 def train():
     print('뇌세포 깨우는 중..')
     sess = tf.Session()
-
+    # 게임
     game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, show_game=False)
+    # DQN
     brain = DQN(sess, SCREEN_WIDTH, SCREEN_HEIGHT, NUM_ACTION)
 
     rewards = tf.placeholder(tf.float32, [None])
     tf.summary.scalar('avg.reward/ep.', tf.reduce_mean(rewards))
-
+    
+    # Tensorflow 변수 저장
     saver = tf.train.Saver()
-    sess.run(tf.global_variables_initializer())
-
+    
+    # Tensorflow 변수 초기화
+    sess.run(tf.global_variables_initializer())    
+    
+    # tensorBorad
     writer = tf.summary.FileWriter('logs', sess.graph)
     summary_merged = tf.summary.merge_all()
 
@@ -58,6 +63,7 @@ def train():
 
         # 게임을 초기화하고 현재 상태를 가져옵니다.
         # 상태는 screen_width x screen_height 크기의 화면 구성입니다.
+        # state는 각각의 블록 위치
         state = game.reset()
         brain.init_state(state)
 
@@ -68,8 +74,10 @@ def train():
             # 초반에는 거의 대부분 랜덤값을 사용하다가 점점 줄어들어
             # 나중에는 거의 사용하지 않게됩니다.
             if np.random.rand() < epsilon:
+                # 초기에는 렌덤 Action
                 action = random.randrange(NUM_ACTION)
             else:
+                # 일정기간 이후에는 DQN에서 Action 받아온다.
                 action = brain.get_action()
 
             # 일정 시간이 지난 뒤 부터 입실론 값을 줄입니다.
@@ -99,11 +107,12 @@ def train():
 
         total_reward_list.append(total_reward)
 
+        # TensorBoard update
         if episode % 10 == 0:
             summary = sess.run(summary_merged, feed_dict={rewards: total_reward_list})
             writer.add_summary(summary, time_step)
             total_reward_list = []
-
+        # 100번에 한번씩 Tensorflow 변수 저장 
         if episode % 100 == 0:
             saver.save(sess, 'model/dqn.ckpt', global_step=time_step)
 
@@ -117,20 +126,24 @@ def replay():
 
     saver = tf.train.Saver()
     ckpt = tf.train.get_checkpoint_state('model')
+    # 저장되어 있는 Tensorflow 변수 불러온다.
     saver.restore(sess, ckpt.model_checkpoint_path)
 
     # 게임을 시작합니다.
     for episode in range(MAX_EPISODE):
         terminal = False
         total_reward = 0
-
+        # 상태 초기화
         state = game.reset()
         brain.init_state(state)
-
+        
+        # 게임 루프 블럭이 한칸씩 이동
         while not terminal:
+            # DQN 으로 부터 Action 받아옴
             action = brain.get_action()
 
             # 결정한 액션을 이용해 게임을 진행하고, 보상과 게임의 종료 여부를 받아옵니다.
+            # Actopm -1,0,1
             state, reward, terminal = game.step(action)
             total_reward += reward
 
