@@ -88,8 +88,7 @@ def train(self):
 
     # 학습시 다음 상태를 만들어 낸 Q value를 입력값으로
     # 타겟 네트웍의 Q value를 실측값으로하여 학습합니다
-    Q_value = self.session.run(self.target_Q_value,
-                               feed_dict={self.input_X: next_state})
+    Q_value = self.session.run(self.target_Q_value, feed_dict={self.input_X: next_state})
 
     # DQN 의 손실 함수에 사용할 핵심적인 값을 계산하는 부분입니다. 다음 수식을 참고하세요.
     # if episode is terminates at step j+1 then r_j
