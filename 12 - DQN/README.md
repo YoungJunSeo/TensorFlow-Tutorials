@@ -47,6 +47,9 @@ def __init__(self, session, width, height, n_action):
 
      self.main_Q = self._build_network('main')
      self.cost, self.train_op = self._build_op()
+     # 학습을 더 잘 되게 하기 위해,
+     # 손실값 계산을 위해 사용하는 타겟(실측값)의 Q value를 계산하는 네트웍을 따로 만들어서 사용합니다
+     self.target_Q = self._build_network('target')
 
 
 def _build_network(self, name):
