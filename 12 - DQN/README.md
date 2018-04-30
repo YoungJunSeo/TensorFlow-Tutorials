@@ -27,6 +27,41 @@
   - 학습시 타겟을 메인 네트웍에서 구하면, 비교할 대상이 예측한 것과 계속 비슷한 상태로 비교하기 때문에 학습이 안정적으로 이루어지지 않기 때문입니다.
 
 ```python
+def __init__(self, session, width, height, n_action):
+     self.session = session
+     self.n_action = n_action
+     self.width = width
+     self.height = height
+     # 게임 플레이결과를 저장할 메모리
+     self.memory = deque()
+     # 현재 게임판의 상태
+     self.state = None
+
+     # 게임의 상태를 입력받을 변수
+     # [게임판의 가로 크기, 게임판의 세로 크기, 게임 상태의 갯수(현재+과거+과거..)]
+     self.input_X = tf.placeholder(tf.float32, [None, width, height, self.STATE_LEN])
+     # 각각의 상태를 만들어낸 액션의 값들입니다. 0, 1, 2 ..
+     self.input_A = tf.placeholder(tf.int64, [None])
+     # 손실값을 계산하는데 사용할 입력값입니다. train 함수를 참고하세요.
+     self.input_Y = tf.placeholder(tf.float32, [None])
+
+     self.main_Q = self._build_network('main')
+     self.cost, self.train_op = self._build_op()
+
+
+def _build_network(self, name):
+     with tf.variable_scope(name):
+        model = tf.layers.conv2d(self.input_X, 32, [4, 4], padding='same', activation=tf.nn.relu)
+        model = tf.layers.conv2d(model, 64, [2, 2], padding='same', activation=tf.nn.relu)
+        model = tf.contrib.layers.flatten(model)
+        dense1 = tf.layers.dense(model, 512, activation=tf.nn.relu)
+        dense2 = tf.layers.dense(dense1, 1024, activation=tf.nn.relu)
+        dense3 = tf.layers.dense(dense2, 512, activation=tf.nn.relu)
+
+        Q = tf.layers.dense(dense3, self.n_action, activation=None)
+
+    return Q
+
 def _build_op(self):
     # DQN 의 손실 함수를 구성하는 부분입니다. 다음 수식을 참고하세요.
     # Perform a gradient descent step on (y_j-Q(ð_j,a_j;θ))^2
