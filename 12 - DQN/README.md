@@ -73,8 +73,7 @@ def _build_op(self):
     return cost, train_op
 
 def get_action(self):
-    Q_value = self.session.run(self.Q_value,
-                               feed_dict={self.input_X: [self.state]})
+    Q_value = self.session.run(self.Q_value, feed_dict={self.input_X: [self.state]})
 
     action = np.argmax(Q_value[0])
 
